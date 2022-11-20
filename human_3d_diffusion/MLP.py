@@ -64,6 +64,7 @@ class Layer():
 
 class Relu():
     def __init__(self):
+        self.y = None
         self.rec = None
 
     def forward(self, x):
@@ -76,23 +77,6 @@ class Relu():
         ans = node_grad
         ans[self.rec] = 0
         return ans
-
-    def update(self, learning_rate):
-        pass
-
-
-class Softmax_Cross_Entropy():
-    def __init__(self):
-        self.y = None
-        self.x = None
-
-    def forward(self, x):
-        self.x = x
-        self.y = np.exp(x) / np.sum(np.exp(x))
-        return self.y
-
-    def backward(self, label):
-        return self.y - label
 
     def update(self, learning_rate):
         pass
@@ -151,7 +135,6 @@ class MLP():
             size_in = hu
 
         self.layers.append(Linear(size_in, self.layer_size[-1], self.with_bias))
-        self.layers.append(Softmax_Cross_Entropy())
 
     def forward(self, x, timesteps, y=None):
         tmp = np.resize(timesteps, x.shape)
@@ -169,11 +152,22 @@ class MLP():
         for layer in self.layers:
             layer.update(learning_rate)
 
-    def predict(self, x):
-        for layer in self.layers:
-            x = layer.forward(x)
-        return np.argmax(x)
+    # def predict(self, x):
+    #     for layer in self.layers:
+    #         x = layer.forward(x)
+    #     return np.argmax(x)
 
-    def loss(self, x, label):
-        y = self.forward(x)
-        return -np.log(y) @ label
+    def loss(self, x, timesteps, label):
+        y = self.forward(x, timesteps)
+        loss_fn = nn.MSELoss(reduction="sum")
+        return loss_fn(y, label)
+
+    def convert_to_fp16(self):
+        """
+        Convert the torso of the model to float16.
+        """
+
+    def convert_to_fp32(self):
+        """
+        Convert the torso of the model to float32.
+        """
