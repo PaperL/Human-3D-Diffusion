@@ -1,3 +1,5 @@
 !.keep
 
 pytorch3d/
+
+.idea/

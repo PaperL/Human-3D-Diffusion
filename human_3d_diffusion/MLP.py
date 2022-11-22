@@ -7,7 +7,6 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 
-from scipy.special import softmax
 
 from .fp16_util import convert_module_to_f16, convert_module_to_f32
 from .nn import (
@@ -48,7 +47,7 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
                 x = layer(x)
 
 
-class Layer():
+class Layer(nn.Module):
     def __init__(self):
         pass
 
@@ -62,7 +61,7 @@ class Layer():
         raise NotImplementedError
 
 
-class Relu():
+class Relu(nn.Module):
     def __init__(self):
         self.y = None
         self.rec = None
@@ -115,7 +114,7 @@ class Linear(Layer):
         self.b -= self.G_b * learning_rate
 
 
-class MLP():
+class MLP(nn.Module):
     def __init__(self, layer_size, with_bias=True, learning_rate=1):
         self.layers = None
         assert len(layer_size) >= 2
@@ -123,9 +122,6 @@ class MLP():
         self.with_bias = with_bias
         self.activation = Relu
         self.learning_rate = learning_rate
-        self.build_model()
-
-    def build_model(self):
         self.layers = []
 
         size_in = self.layer_size[0]
