@@ -49,6 +49,7 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
 
 class Layer(nn.Module):
     def __init__(self):
+        super().__init__()
         pass
 
     def forward(self, x):
@@ -63,6 +64,7 @@ class Layer(nn.Module):
 
 class Relu(nn.Module):
     def __init__(self):
+        super().__init__()
         self.y = None
         self.rec = None
 
@@ -116,6 +118,7 @@ class Linear(Layer):
 
 class MLP(nn.Module):
     def __init__(self, layer_size, with_bias=True, learning_rate=1):
+        super().__init__()
         self.layers = None
         assert len(layer_size) >= 2
         self.layer_size = layer_size
