@@ -1,5 +1,9 @@
 !.keep
 
+__pycache__/
+
 pytorch3d/
 
 .idea/
+
+*test*
