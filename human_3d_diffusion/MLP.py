@@ -7,7 +7,6 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 from .fp16_util import convert_module_to_f16, convert_module_to_f32
 from .nn import (
     SiLU,
@@ -47,6 +46,26 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
                 x = layer(x)
 
 
+class MLP(nn.Module):
+    def __init__(self):
+        super(MLP, self).__init__()
+        self.module = nn.Sequential(
+            nn.Linear(784, 200),
+            nn.ReLU(inplace=True),
+            nn.Linear(200, 200),
+            nn.ReLU(inplace=True),
+            nn.Linear(200, 10),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x, timesteps, y=None):
+        tmp = np.resize(timesteps, x.shape)
+        x = x + tmp
+        x = self.module(x)
+        return x
+
+
+"""
 class Layer(nn.Module):
     def __init__(self):
         super().__init__()
@@ -118,7 +137,7 @@ class Linear(Layer):
 
 class MLP(nn.Module):
     def __init__(self, layer_size, with_bias=True, learning_rate=1):
-        super().__init__()
+        super(MLP, self).__init__()
         self.layers = None
         assert len(layer_size) >= 2
         self.layer_size = layer_size
@@ -162,11 +181,8 @@ class MLP(nn.Module):
         return loss_fn(y, label)
 
     def convert_to_fp16(self):
-        """
-        Convert the torso of the model to float16.
-        """
+        
 
     def convert_to_fp32(self):
-        """
-        Convert the torso of the model to float32.
-        """
+       
+"""

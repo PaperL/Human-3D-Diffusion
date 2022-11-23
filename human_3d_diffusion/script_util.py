@@ -110,10 +110,7 @@ def create_model(
     for res in attention_resolutions.split(","):
         attention_ds.append(image_size // int(res))
 
-    return MLP(
-        layer_size=[2, 4, 2],
-        learning_rate=0.5
-    )
+    return MLP()
 
 
 def sr_model_and_diffusion_defaults():
