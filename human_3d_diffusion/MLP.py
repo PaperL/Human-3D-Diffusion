@@ -50,19 +50,30 @@ class MLP(nn.Module):
     def __init__(self):
         super(MLP, self).__init__()
         self.module = nn.Sequential(
-            nn.Linear(784, 200),
+            nn.Linear(80, 80),
             nn.ReLU(inplace=True),
-            nn.Linear(200, 200),
+            nn.Linear(80, 80),
             nn.ReLU(inplace=True),
-            nn.Linear(200, 10),
+            nn.Linear(80, 80),
             nn.ReLU(inplace=True)
         )
 
     def forward(self, x, timesteps, y=None):
-        tmp = np.resize(timesteps, x.shape)
-        x = x + tmp
+        tmp = np.resize(timesteps.detach().cpu(), x.shape)
+        #print(tmp)
+        #print(x)
+        #print(ss)
+        #tmp = th.reshape(timesteps, x.shape)
+        x = x.detach().cpu() + tmp
+        device = th.device('cuda' if th.cuda.is_available() else 'cpu')
+        x = x.to(device)
         x = self.module(x)
         return x
+
+    def convert_to_fp16(self):
+        pass
+    def convert_to_fp32(self):
+        pass
 
 
 """
