@@ -47,26 +47,28 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
 
 
 class MLP(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size, hidden_layer_size, output_size):
         super(MLP, self).__init__()
         self.module = nn.Sequential(
-            nn.Linear(80, 80),
-            nn.ReLU(inplace=True),
-            nn.Linear(80, 80),
-            nn.ReLU(inplace=True),
-            nn.Linear(80, 80),
-            nn.ReLU(inplace=True)
+            nn.Linear(input_size, hidden_layer_size),
+            nn.ReLU(),
+            nn.Linear(hidden_layer_size, hidden_layer_size),
+            nn.ReLU(),
+            nn.Linear(hidden_layer_size, output_size),
+            nn.ReLU()
+        )
+        self.time_embed_dim = input_size
+        self.time_embed = nn.Sequential(
+            linear(input_size, self.time_embed_dim),
+            SiLU(),
+            linear(self.time_embed_dim, self.time_embed_dim),
         )
 
     def forward(self, x, timesteps, y=None):
-        tmp = np.resize(timesteps.detach().cpu(), x.shape)
-        #print(tmp)
-        #print(x)
-        #print(ss)
-        #tmp = th.reshape(timesteps, x.shape)
-        x = x.detach().cpu() + tmp
+        emb = self.time_embed(timestep_embedding(timesteps, self.time_embed_dim))
         device = th.device('cuda' if th.cuda.is_available() else 'cpu')
         x = x.to(device)
+        x = x + emb
         x = self.module(x)
         return x
 

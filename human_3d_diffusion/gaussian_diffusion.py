@@ -10,6 +10,8 @@ import math
 
 import numpy as np
 import torch as th
+# TODO: smplx (from github)
+# import smplx # to install
 
 from .nn import mean_flat
 from .losses import normal_kl, discretized_gaussian_log_likelihood
@@ -167,6 +169,8 @@ class GaussianDiffusion:
             * np.sqrt(alphas)
             / (1.0 - self.alphas_cumprod)
         )
+        # TODO: smpl model usage
+        #self.body_model = smplx.create('path/to/smplx', model_type='smpl', gender='neutral')
 
     def q_mean_variance(self, x_start, t):
         """
@@ -742,15 +746,22 @@ class GaussianDiffusion:
                 ModelMeanType.START_X: x_start,
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
-            print(model_output.shape)
-            print(target.shape)
-            print(x_start.shape)
+            #print(model_output.shape)
+            #print(target.shape)
+            #print(x_start.shape)
             assert model_output.shape == target.shape == x_start.shape
             terms["mse"] = mean_flat((target - model_output) ** 2)
             if "vb" in terms:
                 terms["loss"] = terms["mse"] + terms["vb"]
             else:
                 terms["loss"] = terms["mse"]
+            # TODO: 3D to 2D projection
+            # model_output here is smpl parameters
+            #smpl_output = self.body_model(betas=xxx, global_orient=xxx, body_pose=xxx, return_verts=False)
+            joints3D = smpl_output.joints
+            # TODO: Add loss api from chaofan
+            # joints3D to joints2D
+            # compute loss between joints2D and gt joints 2D
         else:
             raise NotImplementedError(self.loss_type)
 
