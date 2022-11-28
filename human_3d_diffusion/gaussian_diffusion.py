@@ -10,11 +10,11 @@ import math
 
 import numpy as np
 import torch as th
-# TODO: smplx (from github)
-# import smplx # to install
+import smplx # to install
 
 from .nn import mean_flat
 from .losses import normal_kl, discretized_gaussian_log_likelihood
+from mmhuman3d.models.body_models.builder import build_body_model
 
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
@@ -170,7 +170,17 @@ class GaussianDiffusion:
             / (1.0 - self.alphas_cumprod)
         )
         # TODO: smpl model usage
-        #self.body_model = smplx.create('path/to/smplx', model_type='smpl', gender='neutral')
+        body_model_load_dir = '/home/yanhanchong/Human-3D-Diffusion/mmhuman3d/data/body_models/smpl'
+        extra_joints_regressor = '/home/yanhanchong/Human-3D-Diffusion/mmhuman3d/data/body_models/J_regressor_extra.npy'
+        self.body_model = build_body_model(
+            dict(
+                type='SMPL',
+                keypoint_src='smpl_54',
+                keypoint_dst='smpl_24',
+                model_path=body_model_load_dir,
+                extra_joints_regressor=extra_joints_regressor
+            )
+        )
 
     def q_mean_variance(self, x_start, t):
         """
@@ -680,7 +690,7 @@ class GaussianDiffusion:
         output = th.where((t == 0), decoder_nll, kl)
         return {"output": output, "pred_xstart": out["pred_xstart"]}
 
-    def training_losses(self, model, x_start, t, model_kwargs=None, noise=None):
+    def training_losses(self, model, x_start, t, gt, model_kwargs=None, noise=None):
         """
         Compute training losses for a single timestep.
 
@@ -746,9 +756,6 @@ class GaussianDiffusion:
                 ModelMeanType.START_X: x_start,
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
-            #print(model_output.shape)
-            #print(target.shape)
-            #print(x_start.shape)
             assert model_output.shape == target.shape == x_start.shape
             terms["mse"] = mean_flat((target - model_output) ** 2)
             if "vb" in terms:
@@ -757,8 +764,11 @@ class GaussianDiffusion:
                 terms["loss"] = terms["mse"]
             # TODO: 3D to 2D projection
             # model_output here is smpl parameters
-            #smpl_output = self.body_model(betas=xxx, global_orient=xxx, body_pose=xxx, return_verts=False)
-            joints3D = smpl_output.joints
+            beta = model_output[0][72:82].reshape(1, 10)
+            global_orient = model_output[0][69:72].reshape(1, 3)
+            body_pose = model_output[0][0:69].reshape(1, 69)
+            smpl_output = self.body_model(betas=beta.detach().cpu(), global_orient=global_orient.detach().cpu(), body_pose=body_pose.detach().cpu(), return_verts=False)
+            joints3D = smpl_output['joints']
             # TODO: Add loss api from chaofan
             # joints3D to joints2D
             # compute loss between joints2D and gt joints 2D

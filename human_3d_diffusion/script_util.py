@@ -14,19 +14,19 @@ def model_and_diffusion_defaults():
     Defaults for image training.
     """
     return dict(
-        input_size=80,
-        hidden_layer_size=80,
-        output_size=80,
-        image_size=64,
-        num_channels=128,
-        num_res_blocks=2,
-        num_heads=4,
-        num_heads_upsample=-1,
-        attention_resolutions="16,8",
-        dropout=0.0,
+        input_size=82,
+        hidden_layer_size=82,
+        output_size=82,
+        # image_size=64,
+        # num_channels=128,
+        # num_res_blocks=2,
+        # num_heads=4,
+        # num_heads_upsample=-1,
+        # attention_resolutions="16,8",
+        # dropout=0.0,
         learn_sigma=False,
         sigma_small=False,
-        class_cond=False,
+        # class_cond=False,
         diffusion_steps=1000,
         noise_schedule="linear",
         timestep_respacing="",
@@ -34,8 +34,8 @@ def model_and_diffusion_defaults():
         predict_xstart=False,
         rescale_timesteps=True,
         rescale_learned_sigmas=True,
-        use_checkpoint=False,
-        use_scale_shift_norm=True,
+        # use_checkpoint=False,
+        # use_scale_shift_norm=True,
     )
 
 
@@ -52,8 +52,6 @@ def create_model_and_diffusion(
         predict_xstart,
         rescale_timesteps,
         rescale_learned_sigmas,
-        use_checkpoint,
-        use_scale_shift_norm,
 ):
     model = create_model(
         input_size,

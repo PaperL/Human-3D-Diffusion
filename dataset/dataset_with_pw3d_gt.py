@@ -28,13 +28,14 @@ class HumanPoseVectorTrainSet(Dataset):
         self.gt_file_paths = list(gt_folder_path.rglob('*.pkl'))
 
         self.file_map = {}
-
         for i in range(len(self.npz_file_paths)):
             npz_true_name = str(self.npz_file_paths[i])[len(npz_folder_path_str)+1:]
-            npz_true_name = npz_true_name[:npz_true_name.find("\\")]
+            #npz_true_name = npz_true_name[:npz_true_name.find("\\")]
+            #print(self.gt_file_paths)
+            #print(ss)
             for j in range(len(self.gt_file_paths)):
                 if str.find(str(self.gt_file_paths[j]), npz_true_name) != -1:
-                    # print(npz_true_name, "->", str(self.gt_file_paths[j]))
+                    #print(npz_true_name, "->", str(self.gt_file_paths[j]))
                     self.file_map[i] = j
 
         for i, npz_path in enumerate(progress_bar):

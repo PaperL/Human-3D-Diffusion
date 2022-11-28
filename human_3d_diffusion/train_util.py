@@ -163,10 +163,9 @@ class TrainLoop:
             not self.lr_anneal_steps
             or self.step + self.resume_step < self.lr_anneal_steps
         ):
-            #batch, cond = next(self.data)
-            batch = th.randn(1000, 80)
+            batch, gt = next(self.data)
             cond = None
-            self.run_step(batch, cond)
+            self.run_step(batch, cond, gt)
             if self.step % self.log_interval == 0:
                 logger.dumpkvs()
             if self.step % self.save_interval == 0:
@@ -179,15 +178,15 @@ class TrainLoop:
         if (self.step - 1) % self.save_interval != 0:
             self.save()
 
-    def run_step(self, batch, cond):
-        self.forward_backward(batch, cond)
+    def run_step(self, batch, cond, gt):
+        self.forward_backward(batch, cond, gt)
         if self.use_fp16:
             self.optimize_fp16()
         else:
             self.optimize_normal()
         self.log_step()
 
-    def forward_backward(self, batch, cond):
+    def forward_backward(self, batch, cond, gt):
         zero_grad(self.model_params)
         # TODO: we might not need it
         for i in range(0, batch.shape[0], self.microbatch):
@@ -205,6 +204,7 @@ class TrainLoop:
                 self.ddp_model,
                 micro,
                 t,
+                gt,
                 model_kwargs=micro_cond,
             )
 

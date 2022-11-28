@@ -67,7 +67,7 @@ class MLP(nn.Module):
     def forward(self, x, timesteps, y=None):
         emb = self.time_embed(timestep_embedding(timesteps, self.time_embed_dim))
         device = th.device('cuda' if th.cuda.is_available() else 'cpu')
-        x = x.to(device)
+        x = x.type(th.float32).to(device)
         x = x + emb
         x = self.module(x)
         return x

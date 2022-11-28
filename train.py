@@ -16,12 +16,17 @@ from human_3d_diffusion.script_util import (
 from human_3d_diffusion.train_util import TrainLoop
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from dataset.human_pose_vector_trainset import HumanPoseVectorTrainSet
+#from dataset.human_pose_vector_trainset import HumanPoseVectorTrainSet
+from dataset.dataset_with_pw3d_gt import HumanPoseVectorTrainSet
 
+def forward(x):
+    return
 
 def main():
     max_epochs = 200
-    data_path = '/home/yanhanchong/Human-3D-Diffusion/PW3D_NPZ_multi_person'
+    #data_path = '/home/yanhanchong/Human-3D-Diffusion/PW3D_NPZ_multi_person'
+    data_path = '/home/yanhanchong/Human-3D-Diffusion/PW3D'
+    gt_path = '/home/yanhanchong/Human-3D-Diffusion/sequenceFiles'
     args = create_argparser().parse_args()
 
     dist_util.setup_dist()
@@ -35,12 +40,9 @@ def main():
     #     class_cond=args.class_cond,
     # )
 
-    train_set = HumanPoseVectorTrainSet(data_path)
-    data = DataLoader(train_set, batch_size=4, shuffle=True)
-    # batch, cond = next(data)
-    # print(batch)
-    # print(cond)
-    # print(ss)
+    train_set = HumanPoseVectorTrainSet(data_path, gt_path)
+    dataload = DataLoader(train_set, batch_size=4, shuffle=True)
+    data = iter(dataload)
 
     logger.log("creating model and diffusion...")
     model, diffusion = create_model_and_diffusion(
