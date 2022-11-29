@@ -30,6 +30,7 @@ class HumanPoseVectorTrainSet(Dataset):
         self.file_map = {}
         for i in range(len(self.npz_file_paths)):
             npz_true_name = str(self.npz_file_paths[i])[len(npz_folder_path_str)+1:]
+            npz_true_name = npz_true_name[:-21]
             #npz_true_name = npz_true_name[:npz_true_name.find("\\")]
             #print(self.gt_file_paths)
             #print(ss)
@@ -63,7 +64,8 @@ class HumanPoseVectorTrainSet(Dataset):
         for smpl_type in dat['smpl'].keys():
             np_array = dat['smpl'][smpl_type][id].flatten()
             ret = np.concatenate((ret, np_array), axis=0)
-        return ret, gt_keypoints[person_id][frame_id] if person_id < true_person_n else None
+        zero = torch.zeros(24, 3)
+        return ret, gt_keypoints[person_id][frame_id] if person_id < true_person_n else zero
 
     def __len__(self):
         return self.data_size

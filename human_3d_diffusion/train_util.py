@@ -28,23 +28,23 @@ INITIAL_LOG_LOSS_SCALE = 20.0
 
 class TrainLoop:
     def __init__(
-        self,
-        *,
-        model,
-        diffusion,
-        data,
-        batch_size,
-        microbatch,
-        lr,
-        ema_rate,
-        log_interval,
-        save_interval,
-        resume_checkpoint,
-        use_fp16=False,
-        fp16_scale_growth=1e-3,
-        schedule_sampler=None,
-        weight_decay=0.0,
-        lr_anneal_steps=0,
+            self,
+            *,
+            model,
+            diffusion,
+            data,
+            batch_size,
+            microbatch,
+            lr,
+            ema_rate,
+            log_interval,
+            save_interval,
+            resume_checkpoint,
+            use_fp16=False,
+            fp16_scale_growth=1e-3,
+            schedule_sampler=None,
+            weight_decay=0.0,
+            lr_anneal_steps=0,
     ):
         self.model = model
         self.diffusion = diffusion
@@ -160,10 +160,17 @@ class TrainLoop:
 
     def run_loop(self):
         while (
-            not self.lr_anneal_steps
-            or self.step + self.resume_step < self.lr_anneal_steps
+                not self.lr_anneal_steps
+                or self.step + self.resume_step < self.lr_anneal_steps
         ):
+            # try:
+            #     batch, gt = next(self.data)
+            # except:
+            #     batch = next(self.data)
+            #     gt = None
             batch, gt = next(self.data)
+            if th.equal(gt, th.zeros(gt.shape)):
+                gt = None
             cond = None
             self.run_step(batch, cond, gt)
             if self.step % self.log_interval == 0:
@@ -189,20 +196,21 @@ class TrainLoop:
     def forward_backward(self, batch, cond, gt):
         zero_grad(self.model_params)
         # TODO: we might not need it
+        batch = batch.to(dist_util.dev())
         for i in range(0, batch.shape[0], self.microbatch):
-            micro = batch[i : i + self.microbatch].to(dist_util.dev())
-#            micro_cond = {
-#                k: v[i : i + self.microbatch].to(dist_util.dev())
-#                for k, v in cond.items()
-#            }
+            # micro = batch[i: i + self.microbatch].to(dist_util.dev())
+            # micro_cond = {
+            #     k: v[i: i + self.microbatch].to(dist_util.dev())
+            #     for k, v in cond.items()
+            # }
             micro_cond = None
             last_batch = (i + self.microbatch) >= batch.shape[0]
-            t, weights = self.schedule_sampler.sample(micro.shape[0], dist_util.dev())
-           
+            t, weights = self.schedule_sampler.sample(batch.shape[0], dist_util.dev())
+
             compute_losses = functools.partial(
                 self.diffusion.training_losses,
                 self.ddp_model,
-                micro,
+                batch,
                 t,
                 gt,
                 model_kwargs=micro_cond,
@@ -278,9 +286,9 @@ class TrainLoop:
             if dist.get_rank() == 0:
                 logger.log(f"saving model {rate}...")
                 if not rate:
-                    filename = f"model{(self.step+self.resume_step):06d}.pt"
+                    filename = f"model{(self.step + self.resume_step):06d}.pt"
                 else:
-                    filename = f"ema_{rate}_{(self.step+self.resume_step):06d}.pt"
+                    filename = f"ema_{rate}_{(self.step + self.resume_step):06d}.pt"
                 with bf.BlobFile(bf.join(get_blob_logdir(), filename), "wb") as f:
                     th.save(state_dict, f)
 
@@ -290,8 +298,8 @@ class TrainLoop:
 
         if dist.get_rank() == 0:
             with bf.BlobFile(
-                bf.join(get_blob_logdir(), f"opt{(self.step+self.resume_step):06d}.pt"),
-                "wb",
+                    bf.join(get_blob_logdir(), f"opt{(self.step + self.resume_step):06d}.pt"),
+                    "wb",
             ) as f:
                 th.save(self.opt.state_dict(), f)
 

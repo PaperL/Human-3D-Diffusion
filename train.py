@@ -23,9 +23,9 @@ def forward(x):
     return
 
 def main():
-    max_epochs = 200
-    #data_path = '/home/yanhanchong/Human-3D-Diffusion/PW3D_NPZ_multi_person'
-    data_path = '/home/yanhanchong/Human-3D-Diffusion/PW3D'
+    max_epoches = 50
+    data_path = '/home/yanhanchong/Human-3D-Diffusion/PW3D_NPZ_multi_person'
+    #data_path = '/home/yanhanchong/Human-3D-Diffusion/PW3D'
     gt_path = '/home/yanhanchong/Human-3D-Diffusion/sequenceFiles'
     args = create_argparser().parse_args()
 
@@ -69,7 +69,8 @@ def main():
         weight_decay=args.weight_decay,
         lr_anneal_steps=args.lr_anneal_steps,
     )
-    for epoch in range(max_epochs):
+    for epoch in range(max_epoches):
+        print("epoch: ", epoch)
         loop.run_loop()
 
 

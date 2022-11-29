@@ -15,6 +15,7 @@ import smplx # to install
 from .nn import mean_flat
 from .losses import normal_kl, discretized_gaussian_log_likelihood
 from mmhuman3d.models.body_models.builder import build_body_model
+from mmhuman3d.core.evaluation.eval_utils import keypoint_mpjpe
 
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
@@ -708,7 +709,6 @@ class GaussianDiffusion:
         if noise is None:
             noise = th.randn_like(x_start)
         x_t = self.q_sample(x_start, t, noise=noise)
-
         terms = {}
 
         if self.loss_type == LossType.KL or self.loss_type == LossType.RESCALED_KL:
@@ -764,16 +764,32 @@ class GaussianDiffusion:
                 terms["loss"] = terms["mse"]
             # TODO: 3D to 2D projection
             # model_output here is smpl parameters
-            beta = model_output[0][72:82].reshape(1, 10)
-            global_orient = model_output[0][69:72].reshape(1, 3)
-            body_pose = model_output[0][0:69].reshape(1, 69)
-            smpl_output = self.body_model(betas=beta.detach().cpu(), global_orient=global_orient.detach().cpu(), body_pose=body_pose.detach().cpu(), return_verts=False)
-            joints3D = smpl_output['joints']
-            # TODO: Add loss api from chaofan
-            # joints3D to joints2D
-            # compute loss between joints2D and gt joints 2D
-        else:
-            raise NotImplementedError(self.loss_type)
+            if gt != None:
+                beta = th.zeros(model_output.shape[0], 10)
+                global_orient = th.zeros(model_output.shape[0], 3)
+                body_pose = th.zeros(model_output.shape[0], 69)
+                for i in range(model_output.shape[0]):
+                    beta[i] = model_output[i][72:82].reshape(1, 10)
+                    global_orient[i] = model_output[i][69:72].reshape(1, 3)
+                    body_pose[i] = model_output[i][0:69].reshape(1, 69)
+                smpl_output = self.body_model(betas=beta.detach().cpu(), global_orient=global_orient.detach().cpu(),
+                                            body_pose=body_pose.detach().cpu(), return_verts=False)
+                joints3D = smpl_output['joints']
+                # TODO: Add loss api from chaofan
+                # joints3D to joints2D
+                # compute loss between joints2D and gt joints 2D
+                mask = np.ones((1, gt.shape[1]), dtype=bool)
+                # print(joints3D.shape)
+                # print(gt.shape)
+                loss_3d = []
+                _joints3D = th.chunk(joints3D, joints3D.shape[0], 0)
+                _gt = th.chunk(gt, gt.shape[0], 0)
+                for i in range(joints3D.shape[0]):
+                    loss_3d.append(keypoint_mpjpe(_joints3D[i].detach().numpy(), _gt[i].detach().numpy(), mask, alignment='none'))
+                loss_3d = th.tensor(loss_3d).to(th.device('cuda' if th.cuda.is_available() else 'cpu'))
+                terms["loss"] = terms["loss"] + loss_3d
+            else:
+                raise NotImplementedError(self.loss_type)
 
         return terms
 
