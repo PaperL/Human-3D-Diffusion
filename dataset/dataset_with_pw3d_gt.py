@@ -54,6 +54,8 @@ class HumanPoseVectorTrainSet(Dataset):
         npz_path = self.npz_file_paths[npz_id]
         dat = HumanData.fromfile(str(npz_path))
         ret = np.empty(0)
+        print(npz_path)
+        print(str(self.gt_file_paths[self.file_map[npz_id]]))
         gt_dat = pkl.load(open(str(self.gt_file_paths[self.file_map[npz_id]]), "rb"), encoding="bytes")
         gt_keypoints = torch.Tensor(np.array(gt_dat[b'jointPositions']))
         true_person_n = int(gt_keypoints.shape[0])

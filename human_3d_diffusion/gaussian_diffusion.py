@@ -788,8 +788,8 @@ class GaussianDiffusion:
                     loss_3d.append(keypoint_mpjpe(_joints3D[i].detach().numpy(), _gt[i].detach().numpy(), mask, alignment='none'))
                 loss_3d = th.tensor(loss_3d).to(th.device('cuda' if th.cuda.is_available() else 'cpu'))
                 terms["loss"] = terms["loss"] + loss_3d
-            else:
-                raise NotImplementedError(self.loss_type)
+        else:
+            raise NotImplementedError(self.loss_type)
 
         return terms
 
