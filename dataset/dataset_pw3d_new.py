@@ -4,6 +4,7 @@ import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 from mmhuman3d.data.datasets import build_dataset
+from mmhuman3d.utils.geometry import rotation_matrix_to_angle_axis
 import json
 import torch
 
@@ -32,13 +33,17 @@ class PW3D(Dataset):
 
         _, self.gt_keypoints3d, _ = \
             self.dataset._parse_result(self.res_file)
+
+        print('Parse finish.')
         self.body_model = self.dataset.body_model
 
 
     def __getitem__(self, index):
         # print(torch.tensor(self.res_file["poses"][index]).shape)
         # print(len(np.array(self.res_file["poses"][index]).flatten()), len(self.res_file["betas"][index]))
+        # aa = rotation_matrix_to_angle_axis(torch.tensor(np.array(self.res_file["poses"][index])).reshape(24, 3, 3))
         return np.concatenate(
+            # (aa.reshape(72,), np.array(self.res_file["betas"][index]))
             (np.array(self.res_file["poses"][index]).reshape(216,), np.array(self.res_file["betas"][index]))
             ,axis=0,
         ), np.array(self.gt_keypoints3d[index])
@@ -54,7 +59,7 @@ if __name__ == "__main__":
     from tqdm import tqdm
 
     dataset = PW3D("datasets/result_keypoints.json", 16)
-    print(dataset[0][1].shape)
+    print(dataset[0][0].shape)
     # def forward(x):
     #     return
 
