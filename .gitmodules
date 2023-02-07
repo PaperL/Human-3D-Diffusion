@@ -1,3 +1,0 @@
-[submodule "mmhuman3d"]
-	path = mmhuman3d
-	url = git@github.com:open-mmlab/mmhuman3d.git
