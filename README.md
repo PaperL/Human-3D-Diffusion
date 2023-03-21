@@ -1,5 +1,7 @@
 ## DiffAnnot: Improved Neural Annotator with Denoising Diffusion Model
 
+> Accepted by ICIPMC 2023.
+
 ![](cover.png)
 
 Authors: [Chaofan Lin](https://github.com/SiriusNEO), [Tianyuan Qiu](https://github.com/PaperL), [Hanchong Yan](https://github.com/brandon-yan), [Muzi Tao](https://github.com/Seanzzia)
